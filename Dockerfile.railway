@@ -1,0 +1,20 @@
+# Build-from-source image for Railway (listmonk fork).
+# Builds the Vue frontend + Go binary and embeds assets via make dist.
+FROM golang:1.26-bookworm AS build
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends ca-certificates curl git make gnupg
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+RUN apt-get install -y --no-install-recommends nodejs
+RUN npm install -g yarn
+WORKDIR /src
+COPY . .
+RUN make dist
+
+FROM debian:bookworm-slim
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends ca-certificates tzdata
+WORKDIR /listmonk
+COPY --from=build /src/listmonk ./listmonk
+COPY --from=build /src/config.toml.sample ./config.toml
+EXPOSE 9000
+CMD ./listmonk
