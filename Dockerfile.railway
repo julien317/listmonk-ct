@@ -8,6 +8,9 @@ RUN apt-get install -y --no-install-recommends nodejs
 RUN npm install -g yarn
 WORKDIR /src
 COPY . .
+# Drop the frontend lint pre-hook: repo .dockerignore strips .gitignore, which the
+# eslint prebuild needs (eslint --ignore-path .gitignore). Lint isn't needed to build.
+RUN cd frontend && npm pkg delete scripts.prebuild
 RUN make dist
 
 FROM debian:bookworm-slim
