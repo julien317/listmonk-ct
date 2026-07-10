@@ -6,6 +6,12 @@ Vue.use(VueRouter);
 // The meta.group param is used in App.vue to expand menu group by name.
 const routes = [
   {
+    path: '/segments',
+    name: 'segments',
+    meta: { title: 'Segments' },
+    component: () => import('../views/Segments.vue'),
+  },
+  {
     path: '/404',
     name: '404_page',
     meta: { title: '404' },
