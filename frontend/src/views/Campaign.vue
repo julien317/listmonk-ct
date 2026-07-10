@@ -81,6 +81,13 @@
                 <list-selector v-model="form.lists" :selected="form.lists" :all="lists.results" :disabled="!canEdit"
                   :label="$t('globals.terms.lists')" :placeholder="$t('campaigns.sendToLists')" />
 
+                <b-field v-if="savedSegments.length" label="Saved segment" label-position="on-border"
+                  message="Pick a saved segment to fill the query below, or write one directly.">
+                  <b-select placeholder="(none)" :disabled="!canEdit" @input="onPickSegment" expanded>
+                    <option v-for="(sg, i) in savedSegments" :key="i" :value="sg.query">{{ sg.name }}</option>
+                  </b-select>
+                </b-field>
+
                 <b-field label="Segment (optional)" label-position="on-border"
                   message="Partial SQL applied to the lists above so the campaign sends only to matching subscribers. Example: subscribers.attribs->'tags' ? 'French'. Leave blank to send to the whole list.">
                   <b-input v-model="form.segmentQuery" type="textarea" name="segment_query" :disabled="!canEdit"
@@ -380,6 +387,7 @@ export default Vue.extend({
         headers: [],
         attribsStr: '{}',
         segmentQuery: '',
+        savedSegments: [],
         messenger: 'email',
         lists: [],
         tags: [],
@@ -525,6 +533,10 @@ export default Vue.extend({
           this.updateCampaign();
           break;
       }
+    },
+
+    onPickSegment(query) {
+      this.form.segmentQuery = query;
     },
 
     getCampaign(id) {
@@ -783,6 +795,11 @@ export default Vue.extend({
 
     // Fill default form fields.
     this.form.fromEmail = this.serverConfig.from_email;
+
+    // Load saved segments for the picker (fork feature).
+    this.$api.getSegments().then((segs) => {
+      this.savedSegments = Array.isArray(segs) ? segs : [];
+    }).catch(() => {});
 
     // New campaign.
     const { id } = this.$route.params;
