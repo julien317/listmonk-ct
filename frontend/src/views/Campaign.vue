@@ -374,6 +374,9 @@ export default Vue.extend({
 
       data: {},
 
+      // Saved segments for the campaign picker (fork feature).
+      savedSegments: [],
+
       // IDs from ?list_id query param.
       selListIDs: [],
 
@@ -387,7 +390,6 @@ export default Vue.extend({
         headers: [],
         attribsStr: '{}',
         segmentQuery: '',
-        savedSegments: [],
         messenger: 'email',
         lists: [],
         tags: [],
