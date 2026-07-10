@@ -420,6 +420,10 @@ export const getServerConfig = async () => http.get(
   { loading: models.serverConfig, store: models.serverConfig, camelCase: false },
 );
 
+export const getSegments = () => http.get('/api/segments');
+
+export const updateSegments = (data) => http.put('/api/segments', data);
+
 export const getSettings = async () => http.get(
   '/api/settings',
   { loading: models.settings, store: models.settings, camelCase: false },
