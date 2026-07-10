@@ -53,6 +53,9 @@
         data-cy="listRoles" icon="format-list-bulleted-square" :label="$t('users.listRoles')" />
     </b-menu-item><!-- users -->
 
+    <b-menu-item v-if="$can('settings:get')" :to="{ name: 'segments' }" tag="router-link"
+      icon="filter-variant" label="Segments" data-cy="segments" /><!-- segments -->
+
     <b-menu-item v-if="$can('settings:*')" :expanded="activeGroup.settings" :active="activeGroup.settings"
       data-cy="settings" @update:active="(state) => toggleGroup('settings', state)" icon="cog-outline"
       :label="$t('menu.settings')">
