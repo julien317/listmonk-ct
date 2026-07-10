@@ -145,6 +145,11 @@
           </b-tab-item><!-- activity -->
         </b-tabs>
 
+        <b-field :label="$t('globals.terms.tags')" label-position="on-border" class="mt-6">
+          <b-taginput v-model="tagsList" name="tags" ellipsis icon="tag-outline"
+            :placeholder="$t('globals.terms.tags')" />
+        </b-field>
+
         <b-field :message="$t('subscribers.attribsHelp') + ' ' + egAttribs" class="mt-6">
           <div>
             <h5>{{ $t('globals.terms.attribs') }}</h5>
@@ -334,6 +339,32 @@ export default Vue.extend({
 
   computed: {
     ...mapState(['lists', 'loading']),
+
+    // Two-way tag chips synced to the `tags` array inside the subscriber attribs JSON.
+    tagsList: {
+      get() {
+        try {
+          const a = JSON.parse(this.form.strAttribs || '{}');
+          return Array.isArray(a.tags) ? a.tags : [];
+        } catch (e) {
+          return [];
+        }
+      },
+      set(val) {
+        let a = {};
+        try {
+          a = JSON.parse(this.form.strAttribs || '{}');
+        } catch (e) {
+          a = {};
+        }
+        if (val && val.length) {
+          a.tags = val;
+        } else {
+          delete a.tags;
+        }
+        this.form.strAttribs = JSON.stringify(a, null, 4);
+      },
+    },
 
     hasOptinList() {
       return this.form.lists.some((l) => l.optin === 'double');
