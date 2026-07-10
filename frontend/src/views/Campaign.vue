@@ -508,9 +508,9 @@ export default Vue.extend({
         if (!attribs) {
           attribs = {};
         }
-        attribs.segment_query = this.form.segmentQuery.trim();
-      } else if (attribs && attribs.segment_query !== undefined) {
-        delete attribs.segment_query;
+        attribs.segmentQuery = this.form.segmentQuery.trim();
+      } else if (attribs && attribs.segmentQuery !== undefined) {
+        delete attribs.segmentQuery;
       }
       this.form.attribs = attribs;
 
@@ -536,7 +536,7 @@ export default Vue.extend({
           headersStr: JSON.stringify(data.headers, null, 4),
           archiveMetaStr: data.archiveMeta ? JSON.stringify(data.archiveMeta, null, 4) : '{}',
           attribsStr: data.attribs ? JSON.stringify(data.attribs, null, 4) : '{}',
-          segmentQuery: (data.attribs && data.attribs.segment_query) ? data.attribs.segment_query : '',
+          segmentQuery: (data.attribs && data.attribs.segmentQuery) ? data.attribs.segmentQuery : '',
 
           // The structure that is populated by editor input event.
           content: {
