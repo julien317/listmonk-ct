@@ -68,7 +68,7 @@ func (s *store) NextSubscribers(campID, limit int) ([]models.Subscriber, error) 
 	// the batch is filtered by it (send to a segment of the campaign's lists).
 	segmentQuery := ""
 	if camps[0].Attribs != nil {
-		if v, ok := camps[0].Attribs["segment_query"]; ok {
+		if v, ok := camps[0].Attribs["segmentQuery"]; ok {
 			if str, ok := v.(string); ok {
 				segmentQuery = strings.TrimSpace(str)
 			}
