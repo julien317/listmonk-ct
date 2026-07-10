@@ -3,6 +3,7 @@ package core
 import (
 	"database/sql"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -508,4 +509,24 @@ func (c *Core) DeleteCampaignLinkClicks(before time.Time) error {
 	}
 
 	return nil
+}
+
+
+// NextCampaignSubscribersSegmented returns the next batch of subscribers for a running
+// campaign, filtered by an arbitrary subscriber query expression (a "segment"). It mirrors
+// the prepared NextCampaignSubscribers query but composes the %query% token at runtime.
+// If the query is empty, it applies no additional filter (TRUE).
+func (c *Core) NextCampaignSubscribersSegmented(campID int, campType string, lastID, maxID int, listIDs []int, limit int, segmentQuery string) ([]models.Subscriber, error) {
+	cond := sanitizeSQLExp(segmentQuery)
+	if cond == "" {
+		cond = "TRUE"
+	}
+	stmt := strings.ReplaceAll(c.q.NextCampaignSubscribersSegmented, "%query%", cond)
+
+	var out []models.Subscriber
+	if err := c.db.Select(&out, stmt, campID, campType, lastID, maxID, pq.Array(listIDs), limit); err != nil {
+		c.log.Printf("error fetching segmented campaign subscribers (campaign %d): %v", campID, err)
+		return nil, err
+	}
+	return out, nil
 }
