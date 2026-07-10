@@ -81,6 +81,12 @@
                 <list-selector v-model="form.lists" :selected="form.lists" :all="lists.results" :disabled="!canEdit"
                   :label="$t('globals.terms.lists')" :placeholder="$t('campaigns.sendToLists')" />
 
+                <b-field label="Segment (optional)" label-position="on-border"
+                  message="Partial SQL applied to the lists above so the campaign sends only to matching subscribers. Example: subscribers.attribs->'tags' ? 'French'. Leave blank to send to the whole list.">
+                  <b-input v-model="form.segmentQuery" type="textarea" name="segment_query" :disabled="!canEdit"
+                    placeholder="subscribers.attribs->'tags' ? 'French'" rows="2" />
+                </b-field>
+
                 <div class="columns">
                   <div class="column is-6">
                     <b-field :label="$tc('globals.terms.messenger')" label-position="on-border">
@@ -373,6 +379,7 @@ export default Vue.extend({
         headersStr: '[]',
         headers: [],
         attribsStr: '{}',
+        segmentQuery: '',
         messenger: 'email',
         lists: [],
         tags: [],
@@ -496,6 +503,15 @@ export default Vue.extend({
           return;
         }
       }
+      // Fold the optional segment query into attribs (send to a segment of the lists).
+      if (this.form.segmentQuery && this.form.segmentQuery.trim()) {
+        if (!attribs) {
+          attribs = {};
+        }
+        attribs.segment_query = this.form.segmentQuery.trim();
+      } else if (attribs && attribs.segment_query !== undefined) {
+        delete attribs.segment_query;
+      }
       this.form.attribs = attribs;
 
       switch (typ) {
@@ -520,6 +536,7 @@ export default Vue.extend({
           headersStr: JSON.stringify(data.headers, null, 4),
           archiveMetaStr: data.archiveMeta ? JSON.stringify(data.archiveMeta, null, 4) : '{}',
           attribsStr: data.attribs ? JSON.stringify(data.attribs, null, 4) : '{}',
+          segmentQuery: (data.attribs && data.attribs.segment_query) ? data.attribs.segment_query : '',
 
           // The structure that is populated by editor input event.
           content: {
