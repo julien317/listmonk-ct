@@ -309,7 +309,7 @@ SELECT link_clicks.campaign_id,
 -- name: get-running-campaign
 -- Returns the metadata for a running campaign that is required by next-campaign-subscribers to retrieve
 -- a batch of campaign subscribers for processing.
-SELECT campaigns.id AS campaign_id, campaigns.type as campaign_type, last_subscriber_id, max_subscriber_id, lists.id AS list_id
+SELECT campaigns.id AS campaign_id, campaigns.type as campaign_type, last_subscriber_id, max_subscriber_id, campaigns.attribs AS attribs, lists.id AS list_id
     FROM campaigns
     JOIN campaign_lists ON (campaign_lists.campaign_id = campaigns.id)
     JOIN lists ON (lists.id = campaign_lists.list_id)
@@ -362,6 +362,49 @@ subs AS (
                 )
             )
         ORDER BY s.id LIMIT $6
+    ) subIDs JOIN subscribers s ON (s.id = subIDs.id) ORDER BY s.id
+),
+u AS (
+    UPDATE campaigns
+    SET last_subscriber_id = (SELECT MAX(id) FROM subs), updated_at = NOW()
+    WHERE (SELECT COUNT(id) FROM subs) > 0 AND id=$1
+)
+SELECT * FROM subs;
+
+-- name: next-campaign-subscribers-segmented
+-- raw: true
+-- Same as next-campaign-subscribers but applies an additional arbitrary subscriber
+-- query expression (%query%) so a campaign can send to a segment of its lists.
+-- Raw (non-prepared) because %query% is composed at runtime. Params match
+-- next-campaign-subscribers: $1=campaign_id, $2=type, $3=last_id, $4=max_id, $5=list_ids, $6=limit.
+WITH campLists AS (
+    SELECT lists.id AS list_id, optin FROM lists
+    LEFT JOIN campaign_lists ON campaign_lists.list_id = lists.id
+    WHERE campaign_lists.campaign_id = $1
+),
+subs AS (
+    SELECT s.*
+    FROM (
+        SELECT DISTINCT subscribers.id
+        FROM subscriber_lists sl
+        JOIN campLists ON sl.list_id = campLists.list_id
+        JOIN subscribers ON subscribers.id = sl.subscriber_id
+        WHERE
+            sl.list_id = ANY($5::INT[])
+            AND subscribers.id > $3
+            AND subscribers.id <= $4
+            AND subscribers.status != 'blocklisted'
+            AND (
+                ($2 = 'optin' AND sl.status = 'unconfirmed' AND campLists.optin = 'double')
+                OR (
+                    $2 != 'optin' AND (
+                        (campLists.optin = 'double' AND sl.status = 'confirmed') OR
+                        (campLists.optin != 'double' AND sl.status != 'unsubscribed')
+                    )
+                )
+            )
+            AND (%query%)
+        ORDER BY subscribers.id LIMIT $6
     ) subIDs JOIN subscribers s ON (s.id = subIDs.id) ORDER BY s.id
 ),
 u AS (
