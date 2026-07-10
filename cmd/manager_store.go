@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/gofrs/uuid/v5"
 	"github.com/knadh/listmonk/internal/core"
 	"github.com/knadh/listmonk/internal/manager"
@@ -22,7 +24,8 @@ type runningCamp struct {
 	CampaignType     string `db:"campaign_type"`
 	LastSubscriberID int    `db:"last_subscriber_id"`
 	MaxSubscriberID  int    `db:"max_subscriber_id"`
-	ListID           int    `db:"list_id"`
+	ListID           int          `db:"list_id"`
+	Attribs          models.JSON  `db:"attribs"`
 }
 
 func newManagerStore(q *models.Queries, c *core.Core, m media.Store) *store {
@@ -59,6 +62,21 @@ func (s *store) NextSubscribers(campID, limit int) ([]models.Subscriber, error) 
 
 	if len(listIDs) == 0 {
 		return nil, nil
+	}
+
+	// Extract an optional segment query from the campaign's attribs. If present,
+	// the batch is filtered by it (send to a segment of the campaign's lists).
+	segmentQuery := ""
+	if camps[0].Attribs != nil {
+		if v, ok := camps[0].Attribs["segment_query"]; ok {
+			if str, ok := v.(string); ok {
+				segmentQuery = strings.TrimSpace(str)
+			}
+		}
+	}
+
+	if segmentQuery != "" {
+		return s.core.NextCampaignSubscribersSegmented(camps[0].CampaignID, camps[0].CampaignType, camps[0].LastSubscriberID, camps[0].MaxSubscriberID, listIDs, limit, segmentQuery)
 	}
 
 	var out []models.Subscriber
