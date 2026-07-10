@@ -84,6 +84,8 @@ type Queries struct {
 	GetRunningCampaign       *sqlx.Stmt `query:"get-running-campaign"`
 	NextCampaignSubscribers  *sqlx.Stmt `query:"next-campaign-subscribers"`
 	NextCampaignSubscribersSegmented string     `query:"next-campaign-subscribers-segmented"`
+	GetSegments  *sqlx.Stmt `query:"get-segments"`
+	SaveSegments *sqlx.Stmt `query:"save-segments"`
 	GetOneCampaignSubscriber *sqlx.Stmt `query:"get-one-campaign-subscriber"`
 	UpdateCampaign           *sqlx.Stmt `query:"update-campaign"`
 	UpdateCampaignStatus     *sqlx.Stmt `query:"update-campaign-status"`
